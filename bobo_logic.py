@@ -15,6 +15,9 @@ c.execute('''CREATE TABLE IF NOT EXISTS events
 c.execute("SELECT COUNT(*) FROM events WHERE event_name LIKE 'sen%'")
 sleep_event_count = c.fetchone()[0]
 
+# Zmienna globalna przechowująca czas rozpoczęcia snu
+sleep_start_time = None
+
 # Funkcja obsługująca zapisywanie zdarzeń do bazy danych
 def save_event(event_name):
     now = datetime.datetime.now()
@@ -38,3 +41,8 @@ def calculate_sleep_duration(start_time, end_time):
     end_datetime = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
     sleep_duration = end_datetime - start_datetime
     return str(sleep_duration)
+
+# Funkcja pobierająca zdarzenia dla określonej daty
+def get_events_by_date(date):
+    c.execute("SELECT event_name, event_time FROM events WHERE DATE(event_time) = ?", (date,))
+    return c.fetchall()
