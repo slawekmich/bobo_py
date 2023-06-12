@@ -1,46 +1,24 @@
 import tkinter as tk
 import datetime
-import sqlite3
+import bobo_logic
 from tkinter import messagebox
-
-# Tworzenie połączenia z bazą danych
-conn = sqlite3.connect('events.db')
-c = conn.cursor()
-
-# Tworzenie tabeli w bazie danych, jeśli nie istnieje
-c.execute('''CREATE TABLE IF NOT EXISTS events
-             (id INTEGER PRIMARY KEY AUTOINCREMENT,
-              event_name TEXT,
-              event_time TEXT)''')
-
-# Funkcja obsługująca zapisywanie zdarzeń do bazy danych
-def save_event(event_name):
-    now = datetime.datetime.now()
-    event_time = now.strftime("%Y-%m-%d %H:%M:%S")
-    c.execute("INSERT INTO events (event_name, event_time) VALUES (?, ?)", (event_name, event_time))
-    conn.commit()
-
-# Funkcja obsługująca zapisywanie czasu snu do bazy danych
-def save_sleep_time(start_time, end_time):
-    sleep_duration = end_time - start_time
-    c.execute("INSERT INTO events (event_name, event_time) VALUES (?, ?)", ('Sleep', sleep_duration))
-    conn.commit()
 
 # Funkcja obsługująca przyciski zdarzeń
 def event_button_click(event_name):
-    save_event(event_name)
+    bobo_logic.save_event(event_name)
     messagebox.showinfo("Potwierdzenie", "Zdarzenie zapisane do bazy danych.")
 
 # Funkcja obsługująca przyciski snu
 def sleep_button_click(button_name):
     now = datetime.datetime.now()
-    if button_name == "Start snu":
-        sleep_start_time = now
+    if button_name == "Start":
+        sleep_start_time = now.strftime("%Y-%m-%d %H:%M:%S")
         messagebox.showinfo("Potwierdzenie", "Rozpoczęto pomiar czasu snu.")
-    elif button_name == "Stop snu":
-        sleep_end_time = now
-        save_sleep_time(sleep_start_time, sleep_end_time)
-        messagebox.showinfo("Potwierdzenie", "Czas snu zapisany do bazy danych.")
+    elif button_name == "Stop":
+        sleep_end_time = now.strftime("%Y-%m-%d %H:%M:%S")
+        sleep_duration = bobo_logic.calculate_sleep_duration(sleep_start_time, sleep_end_time)
+        bobo_logic.save_sleep_time(sleep_start_time, sleep_end_time)
+        messagebox.showinfo("Potwierdzenie", f"Czas snu: {sleep_duration}. Zapisano do bazy danych.")
 
 # Tworzenie interfejsu użytkownika
 root = tk.Tk()
@@ -76,8 +54,8 @@ summary_frame.pack()
 
 def get_daily_summary():
     today = datetime.date.today()
-    c.execute("SELECT event_name, event_time FROM events WHERE DATE(event_time) = ?", (today,))
-    events = c.fetchall()
+    bobo_logic.c.execute("SELECT event_name, event_time FROM events WHERE DATE(event_time) = ?", (today,))
+    events = bobo_logic.c.fetchall()
 
     messagebox.showinfo("Podsumowanie zdarzeń", "Podsumowanie zdarzeń dzisiaj:\n\n{}".format("\n".join([f"{event[0]} - {event[1]}" for event in events])))
 
