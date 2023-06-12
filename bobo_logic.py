@@ -41,3 +41,8 @@ def calculate_sleep_duration(start_time, end_time):
     end_datetime = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
     sleep_duration = end_datetime - start_datetime
     return str(sleep_duration)
+
+# Funkcja pobierająca zdarzenia dla określonej daty
+def get_events_by_date(date):
+    c.execute("SELECT event_name, event_time FROM events WHERE DATE(event_time) = ?", (date,))
+    return c.fetchall()

@@ -72,5 +72,3 @@ def get_daily_summary():
 summary_button = tk.Button(summary_frame, text="Podsumowanie zdarzeń dzisiaj", command=get_daily_summary)
 summary_button.pack()
 
-# Uruchomienie aplikacji
-root.mainloop()
