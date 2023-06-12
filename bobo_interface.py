@@ -1,23 +1,24 @@
 import tkinter as tk
 import datetime
-import bobo_logic
+import bobo_logic as logic
 from tkinter import messagebox
 
 # Funkcja obsługująca przyciski zdarzeń
 def event_button_click(event_name):
-    bobo_logic.save_event(event_name)
+    logic.save_event(event_name)
     messagebox.showinfo("Potwierdzenie", "Zdarzenie zapisane do bazy danych.")
 
 # Funkcja obsługująca przyciski snu
 def sleep_button_click(button_name):
+    global sleep_start_time
     now = datetime.datetime.now()
     if button_name == "Start":
         sleep_start_time = now.strftime("%Y-%m-%d %H:%M:%S")
         messagebox.showinfo("Potwierdzenie", "Rozpoczęto pomiar czasu snu.")
     elif button_name == "Stop":
         sleep_end_time = now.strftime("%Y-%m-%d %H:%M:%S")
-        sleep_duration = bobo_logic.calculate_sleep_duration(sleep_start_time, sleep_end_time)
-        bobo_logic.save_sleep_time(sleep_start_time, sleep_end_time)
+        sleep_duration = logic.calculate_sleep_duration(sleep_start_time, sleep_end_time)
+        logic.save_sleep_time(sleep_start_time, sleep_end_time)
         messagebox.showinfo("Potwierdzenie", f"Czas snu: {sleep_duration}. Zapisano do bazy danych.")
 
 # Tworzenie interfejsu użytkownika
@@ -54,10 +55,19 @@ summary_frame.pack()
 
 def get_daily_summary():
     today = datetime.date.today()
-    bobo_logic.c.execute("SELECT event_name, event_time FROM events WHERE DATE(event_time) = ?", (today,))
-    events = bobo_logic.c.fetchall()
+    logic.c.execute("SELECT event_name, event_time FROM events WHERE DATE(event_time) = ?", (today,))
+    events = logic.c.fetchall()
 
-    messagebox.showinfo("Podsumowanie zdarzeń", "Podsumowanie zdarzeń dzisiaj:\n\n{}".format("\n".join([f"{event[0]} - {event[1]}" for event in events])))
+    summary = ""
+    for event in events:
+        event_name = event[0]
+        event_time = event[1]
+        if event_name.startswith("sen"):
+            summary += f"{event_name}: {event_time}\n"
+        else:
+            summary += f"{event_name} - {event_time}\n"
+
+    messagebox.showinfo("Podsumowanie zdarzeń", f"Podsumowanie zdarzeń dzisiaj:\n\n{summary}")
 
 summary_button = tk.Button(summary_frame, text="Podsumowanie zdarzeń dzisiaj", command=get_daily_summary)
 summary_button.pack()
